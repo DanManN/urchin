@@ -181,15 +181,34 @@ def unparse_origin(matrix):
     return node
 
 def resolve_filepath(base_path, file_path):
+    # base_path is the path to the URDF's folder
+    # print('base_path: ', base_path)
+    # print('file_path: ', file_path)
     parsed_url = urlparse(file_path)
+    # the parsed_url.netloc is the domain name (the one after the package), and parsed_url.path is the path
+    # print("parsed_url.netloc: ", parsed_url.netloc)
+    # print("parsed_url.path: ", parsed_url.path)
     dirname = base_path
+    # print('scheme: ', parsed_url.scheme)
+    # scheme is the one before ://
     file_path = parsed_url.netloc + parsed_url.path
     while not dirname == '/':
         resolved_filepath = os.path.join(dirname, file_path)
+        # print('dirname: ', dirname)
+        # print('resolved_filepath: ', resolved_filepath)
         # print(resolved_filepath)
         if os.path.exists(resolved_filepath):
             return resolved_filepath
         dirname = os.path.dirname(dirname)
+    # * if iteratively resolving it through going to the parent dir does not work, then we use ros to resolve it.
+    if parsed_url.scheme == 'package':
+        from rospkg import RosPack
+        # this requires sourcing the workspace before doing it.
+        rp = RosPack()
+        resolved_filepath = rp.get_path(parsed_url.netloc) + parsed_url.path
+        # print('resolved_filepath: ', resolved_filepath)
+        if os.path.exists(resolved_filepath):
+            return resolved_filepath
     return False
 
 def get_filename(base_path, file_path, makedirs=False):
