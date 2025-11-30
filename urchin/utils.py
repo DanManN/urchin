@@ -1,6 +1,7 @@
 """Utilities for URDF parsing.
 """
 import os
+import rospkg
 
 from lxml import etree as ET
 import numpy as np
@@ -199,6 +200,11 @@ def get_filename(base_path, file_path, makedirs=False):
         The resolved filepath -- just the normal ``file_path`` if it was an
         absolute path, otherwise that path joined to ``base_path``.
     """
+    if file_path.startswith('package://'):
+        rospack = rospkg.RosPack()
+        pkg_name, rel_path = file_path[len('package://'):].split('/', 1)
+        package_path = rospack.get_path(pkg_name)
+        return os.path.join(package_path, rel_path)
     fn = file_path
     if not os.path.isabs(file_path):
         fn = os.path.join(base_path, file_path)
